@@ -1,0 +1,23 @@
+{
+  "id": "tabcalirizer",
+  "name": "TabCalirizer",
+  "description": "Color tabs by domain or subdomain, with optional colored borders around the page.",
+  "author": "Phoenix-uy",
+  "version": "0.1.0",
+  "homepage": "https://github.com/Phoenix-uy/tabcalirizer",
+  "readme": "https://raw.githubusercontent.com/Phoenix-uy/tabcalirizer/main/README.md",
+  "style": {
+    "chrome": "chrome.css"
+  },
+  "scripts": {
+    "tabcalirizer.uc.js": {
+      "include": ["chrome://browser/content/browser.xhtml"]
+    },
+    "tabcalirizer-prefs.uc.js": {
+      "include": ["about:preferences*", "about:settings*"]
+    }
+  },
+  "supportsUnload": true,
+  "tags": ["tabs", "colors", "productivity"],
+  "fork": ["zen"]
+}

@@ -1,0 +1,103 @@
+/* TabCalirizer — chrome styles.
+ * Hooks set by tabcalirizer.uc.js on each colored tab:
+ *   [tcz]                  tab has a matching rule
+ *   [tcz-tab-style]        background | border | both
+ *   [tcz-border-pos]       left | outline
+ *   --tcz-color / --tcz-fg rule color and readable text color
+ * Tweak the intensities below to taste.
+ */
+
+:root {
+  --tcz-inactive-mix: 55%;   /* how strong the color is on inactive tabs */
+  --tcz-hover-mix: 70%;
+  --tcz-selected-mix: 100%;  /* selected tab: full color */
+  --tcz-accent-width: 4px;   /* left accent bar */
+  --tcz-outline-width: 2px;  /* full outline */
+}
+
+/* ---------- Background ---------- */
+
+.tabbrowser-tab[tcz]:is([tcz-tab-style="background"], [tcz-tab-style="both"]) {
+  & > .tab-stack > .tab-background {
+    background: color-mix(in srgb, var(--tcz-color) var(--tcz-inactive-mix), transparent) !important;
+  }
+  &:hover > .tab-stack > .tab-background {
+    background: color-mix(in srgb, var(--tcz-color) var(--tcz-hover-mix), transparent) !important;
+  }
+  &:is([selected], [visuallyselected], [multiselected]) > .tab-stack > .tab-background {
+    background: color-mix(in srgb, var(--tcz-color) var(--tcz-selected-mix), transparent) !important;
+  }
+  /* Readable text and icons on the selected (full-color) tab. */
+  &:is([selected], [visuallyselected]) {
+    & .tab-label,
+    & .tab-close-button,
+    & .tab-reset-button,
+    & .tab-icon-overlay {
+      color: var(--tcz-fg) !important;
+      fill: var(--tcz-fg) !important;
+    }
+  }
+}
+
+/* The selected colored tab keeps a visible marker so it never looks like an inactive one. */
+.tabbrowser-tab[tcz]:is([selected], [visuallyselected]) > .tab-stack > .tab-background {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--tcz-fg) 35%, transparent),
+    0 1px 4px color-mix(in srgb, var(--tcz-color) 45%, transparent) !important;
+}
+
+/* ---------- Border ---------- */
+
+.tabbrowser-tab[tcz]:is([tcz-tab-style="border"], [tcz-tab-style="both"])[tcz-border-pos="left"] > .tab-stack > .tab-background {
+  border-inline-start: var(--tcz-accent-width) solid var(--tcz-color) !important;
+}
+
+.tabbrowser-tab[tcz]:is([tcz-tab-style="border"], [tcz-tab-style="both"])[tcz-border-pos="outline"] > .tab-stack > .tab-background {
+  outline: var(--tcz-outline-width) solid var(--tcz-color) !important;
+  outline-offset: calc(-1 * var(--tcz-outline-width)) !important;
+}
+
+/* Border-only tabs: a light tint on the selected one so it still stands out. */
+.tabbrowser-tab[tcz][tcz-tab-style="border"]:is([selected], [visuallyselected]) > .tab-stack > .tab-background {
+  background: color-mix(in srgb, var(--tcz-color) 18%, var(--tab-selected-bgcolor, transparent)) !important;
+}
+
+/* ---------- Content-area border ---------- */
+
+.browserSidebarContainer[tcz-relative] {
+  position: relative;
+}
+
+.tcz-page-border {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+  border: var(--tcz-page-width, 3px) var(--tcz-page-style, solid) var(--tcz-color, transparent);
+  border-radius: inherit;
+  box-sizing: border-box;
+}
+
+:root[inDOMFullscreen="true"] .tcz-page-border {
+  display: none;
+}
+
+/* ---------- Context menu swatches ---------- */
+
+.tcz-swatch-item::before {
+  content: "";
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-inline-end: 8px;
+  border-radius: 4px;
+  background: var(--tcz-color);
+  border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+  vertical-align: middle;
+}
+
+/* ---------- Toolbar button icon ---------- */
+
+#tabcalirizer-button {
+  list-style-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='1' y='3' width='6' height='4' rx='1.5' fill='%23e53935'/%3E%3Crect x='9' y='3' width='6' height='4' rx='1.5' fill='%231e88e5'/%3E%3Crect x='1' y='9' width='6' height='4' rx='1.5' fill='%2343a047'/%3E%3Crect x='9' y='9' width='6' height='4' rx='1.5' fill='%23fb8c00'/%3E%3C/svg%3E");
+}

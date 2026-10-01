@@ -1,0 +1,277 @@
+/* TabCalirizer — settings pane styles (about:preferences). */
+
+.tcz-group {
+  --tcz-gap: 8px;
+}
+
+.tcz-desc {
+  margin-block: 0 12px;
+}
+
+.tcz-row,
+.tcz-field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--tcz-gap);
+  margin-block: 8px;
+}
+
+.tcz-field > label:first-child:not(.tcz-inline) {
+  min-width: 110px;
+  font-weight: 600;
+}
+
+.tcz-indent {
+  padding-inline-start: 118px;
+}
+
+.tcz-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tcz-input {
+  padding: 4px 8px;
+  min-height: 28px;
+  box-sizing: border-box;
+}
+
+.tcz-wide {
+  min-width: 260px;
+  flex: 1 1 260px;
+}
+
+.tcz-hex {
+  width: 90px;
+  font-family: monospace;
+}
+
+.tcz-num {
+  width: 64px;
+}
+
+.tcz-invalid {
+  outline: 2px solid var(--text-color-error, #d70022) !important;
+}
+
+.tcz-color {
+  width: 40px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+}
+
+.tcz-error {
+  color: var(--text-color-error, #d70022);
+}
+
+.tcz-error:empty {
+  display: none;
+}
+
+.tcz-status {
+  display: block;
+  margin-top: 6px;
+}
+
+button.tcz-small {
+  min-height: 24px;
+  padding: 2px 10px;
+  margin: 0;
+}
+
+button.tcz-primary {
+  background-color: var(--color-accent-primary, #0061e0);
+  color: var(--button-text-color-primary, #fff);
+}
+
+/* ---------- Editor ---------- */
+
+.tcz-editor {
+  border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-block: 12px;
+}
+
+.tcz-editor[hidden],
+.tcz-field[hidden] {
+  display: none;
+}
+
+.tcz-editor-title {
+  margin: 0 0 4px;
+}
+
+/* ---------- Swatches & palette ---------- */
+
+.tcz-palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-block: 8px;
+}
+
+.tcz-palette-small {
+  gap: 6px;
+  margin: 0;
+}
+
+.tcz-palette-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 4px 3px 6px;
+  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  border-radius: 8px;
+}
+
+.tcz-swatch {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  min-height: 20px;
+  padding: 0;
+  margin: 0;
+  border-radius: 5px;
+  background: var(--tcz-color) !important;
+  border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+  vertical-align: middle;
+}
+
+button.tcz-swatch {
+  cursor: pointer;
+}
+
+button.tcz-swatch:hover {
+  outline: 2px solid var(--tcz-color);
+  outline-offset: 2px;
+}
+
+.tcz-icon-btn {
+  min-width: 22px;
+  min-height: 22px;
+  padding: 0;
+  margin: 0;
+  line-height: 1;
+}
+
+/* ---------- Rule list ---------- */
+
+.tcz-rule-list {
+  margin-block: 12px;
+}
+
+.tcz-rule {
+  display: grid;
+  grid-template-columns: 28px minmax(140px, 1.6fr) 1.2fr 1.2fr 0.9fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+}
+
+.tcz-rule-head {
+  font-weight: 600;
+  opacity: 0.75;
+}
+
+.tcz-rule-pattern {
+  font-family: monospace;
+  overflow-wrap: anywhere;
+}
+
+.tcz-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.tcz-test-result .tcz-swatch {
+  width: 14px;
+  height: 14px;
+  min-width: 14px;
+  min-height: 14px;
+}
+
+/* ---------- Preview ---------- */
+
+.tcz-preview {
+  display: flex;
+  gap: 10px;
+  margin-block: 12px;
+  padding: 10px;
+  border-radius: 12px;
+  background: color-mix(in srgb, currentColor 6%, transparent);
+}
+
+.tcz-pv-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 170px;
+}
+
+.tcz-pv-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.9em;
+  box-sizing: border-box;
+}
+
+.tcz-pv-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: color-mix(in srgb, currentColor 40%, transparent);
+}
+
+.tcz-pv-tab:is([data-style="background"], [data-style="both"]) {
+  background: color-mix(in srgb, var(--tcz-color) 55%, transparent);
+}
+
+.tcz-pv-tab.tcz-pv-selected:is([data-style="background"], [data-style="both"]) {
+  background: var(--tcz-color);
+  color: var(--tcz-fg);
+}
+
+.tcz-pv-tab.tcz-pv-selected {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 35%, transparent);
+}
+
+.tcz-pv-tab.tcz-pv-selected[data-style="border"] {
+  background: color-mix(in srgb, var(--tcz-color) 18%, transparent);
+}
+
+.tcz-pv-tab:is([data-style="border"], [data-style="both"])[data-pos="left"] {
+  border-inline-start: 4px solid var(--tcz-color);
+}
+
+.tcz-pv-tab:is([data-style="border"], [data-style="both"])[data-pos="outline"] {
+  outline: 2px solid var(--tcz-color);
+  outline-offset: -2px;
+}
+
+.tcz-pv-plain {
+  opacity: 0.7;
+}
+
+.tcz-pv-page {
+  flex: 1;
+  min-height: 110px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: light-dark(#fff, #202020);
+  box-sizing: border-box;
+  opacity: 0.95;
+}
