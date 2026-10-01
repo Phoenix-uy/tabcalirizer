@@ -182,9 +182,25 @@ button.tcz-swatch:hover {
   opacity: 0.75;
 }
 
+.tcz-rule-site {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.tcz-rule-title {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
 .tcz-rule-pattern {
   font-family: monospace;
   overflow-wrap: anywhere;
+}
+
+.tcz-rule-title + .tcz-rule-pattern {
+  font-size: 0.9em;
+  opacity: 0.75;
 }
 
 .tcz-actions {
@@ -265,6 +281,7 @@ button.tcz-swatch:hover {
 }
 
 .tcz-pv-page {
+  position: relative;
   flex: 1;
   min-height: 110px;
   display: flex;
@@ -274,4 +291,24 @@ button.tcz-swatch:hover {
   background: light-dark(#fff, #202020);
   box-sizing: border-box;
   opacity: 0.95;
+}
+
+.tcz-pv-label {
+  position: absolute;
+  inset-inline-end: 12px;
+  bottom: 0;
+  max-width: 40%;
+  padding: 1px 7px 2px;
+  border-radius: 6px 6px 0 0;
+  background: var(--tcz-color);
+  color: var(--tcz-fg);
+  font: 600 10px/1.3 system-ui, sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.7;
+}
+
+.tcz-pv-label[hidden] {
+  display: none;
 }

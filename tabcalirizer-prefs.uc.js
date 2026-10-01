@@ -226,6 +226,12 @@
 
   function buildEditor() {
     const e = (ui.ed = {});
+    e.title = h("input", {
+      type: "text",
+      class: "tcz-input tcz-wide",
+      placeholder: "Optional, e.g. Work mail",
+      maxlength: String(T.TITLE_MAX),
+    });
     e.pattern = h("input", { type: "text", class: "tcz-input tcz-wide", placeholder: "mail.google.com or *.google.com" });
     e.type = options(h("select", { class: "tcz-select" }), T.MATCH_TYPES, "exact");
     e.color = h("input", { type: "color", class: "tcz-color", value: "#1e88e5" });
@@ -250,6 +256,14 @@
       class: "tcz-input tcz-num",
     });
     e.pageStyle = options(h("select", { class: "tcz-select" }), T.PAGE_BORDER_STYLES, "solid");
+    e.showTitle = h("input", { type: "checkbox", id: "tcz-show-title" });
+    e.showTitleHint = h("span", { class: "description-deemphasized" });
+    e.showTitleRow = h(
+      "div",
+      { class: "tcz-field tcz-indent" },
+      h("label", { class: "tcz-inline", for: "tcz-show-title" }, e.showTitle, "Show the title on the page border"),
+      e.showTitleHint
+    );
     e.pageDetails = h(
       "div",
       { class: "tcz-field tcz-indent" },
@@ -270,7 +284,8 @@
       }
       updatePreview();
     });
-    for (const el of [e.type, e.tabStyle, e.borderPos, e.pageOn, e.pageStyle]) {
+    e.title.addEventListener("input", updatePreview);
+    for (const el of [e.type, e.tabStyle, e.borderPos, e.pageOn, e.pageStyle, e.showTitle]) {
       el.addEventListener("change", updatePreview);
     }
     e.pageWidth.addEventListener("input", () => {
@@ -286,6 +301,7 @@
       "div",
       { class: "tcz-editor", hidden: true },
       h("h3", { class: "tcz-editor-title", text: "New rule" }),
+      h("div", { class: "tcz-field" }, h("label", { text: "Title" }), e.title),
       h("div", { class: "tcz-field" }, h("label", { text: "Site" }), e.pattern, e.type),
       h(
         "div",
@@ -304,6 +320,7 @@
         h("label", { class: "tcz-inline", for: "tcz-page-on" }, e.pageOn, "Draw a border around the page")
       ),
       e.pageDetails,
+      e.showTitleRow,
       e.preview.root,
       e.error,
       h(
@@ -324,7 +341,8 @@
       h("span", { class: "tcz-pv-dot" }),
       h("span", { text: "Selected tab" })
     );
-    p.page = h("div", { class: "tcz-pv-page" }, h("span", { text: "Web page" }));
+    p.label = h("span", { class: "tcz-pv-label", hidden: true });
+    p.page = h("div", { class: "tcz-pv-page" }, h("span", { text: "Web page" }), p.label);
     p.root = h(
       "div",
       { class: "tcz-preview" },
@@ -338,6 +356,7 @@
     const e = ui.ed;
     return {
       id: ui.editingId ?? undefined,
+      title: e.title.value,
       pattern: e.pattern.value,
       type: e.type.value,
       color: readHex(e.hex),
@@ -347,6 +366,7 @@
         enabled: e.pageOn.checked,
         width: e.pageWidthNum.value,
         style: e.pageStyle.value,
+        showTitle: e.showTitle.checked,
       },
     };
   }
@@ -359,6 +379,14 @@
     const hasBorder = v.tabStyle !== "background";
     e.borderPosRow.hidden = !hasBorder;
     e.pageDetails.hidden = !v.pageBorder.enabled;
+    e.showTitleRow.hidden = !v.pageBorder.enabled;
+    const title = v.title.trim();
+    e.showTitleHint.textContent = title ? "" : "(add a title above)";
+    const showLabel = v.pageBorder.enabled && v.pageBorder.showTitle && Boolean(title);
+    e.preview.label.hidden = !showLabel;
+    e.preview.label.textContent = title;
+    e.preview.label.style.setProperty("--tcz-color", color);
+    e.preview.label.style.setProperty("--tcz-fg", fg);
     for (const tab of [e.preview.inactive, e.preview.active]) {
       tab.style.setProperty("--tcz-color", color);
       tab.style.setProperty("--tcz-fg", fg);
@@ -408,6 +436,8 @@
     e.pageOn.checked = Boolean(draft.pageBorder?.enabled);
     e.pageWidth.value = e.pageWidthNum.value = String(draft.pageBorder?.width ?? 3);
     e.pageStyle.value = draft.pageBorder?.style ?? "solid";
+    e.title.value = draft.title ?? "";
+    e.showTitle.checked = Boolean(draft.pageBorder?.showTitle);
     renderEditorSwatches();
     updatePreview();
     ui.editor.hidden = false;
@@ -470,7 +500,12 @@
           "div",
           { class: "tcz-rule" },
           h("span", { class: "tcz-swatch tcz-swatch-static", title: r.color, style: { "--tcz-color": r.color } }),
-          h("span", { class: "tcz-rule-pattern", text: displayPattern(r) }),
+          h(
+            "span",
+            { class: "tcz-rule-site" },
+            r.title ? h("span", { class: "tcz-rule-title", text: r.title }) : null,
+            h("span", { class: "tcz-rule-pattern", text: displayPattern(r) })
+          ),
           h("span", { text: T.MATCH_TYPES[r.type] }),
           h(
             "span",
@@ -480,7 +515,11 @@
                 (r.tabStyle === "background" ? "" : ` (${T.BORDER_POSITIONS[r.borderPosition].toLowerCase()})`),
             }
           ),
-          h("span", { text: r.pageBorder.enabled ? `${r.pageBorder.width}px ${r.pageBorder.style}` : "Off" }),
+          h("span", {
+            text: r.pageBorder.enabled
+              ? `${r.pageBorder.width}px ${r.pageBorder.style}${r.pageBorder.showTitle && r.title ? " + title" : ""}`
+              : "Off",
+          }),
           h(
             "span",
             { class: "tcz-actions" },
@@ -510,7 +549,7 @@
             {},
             "Matches ",
             h("span", { class: "tcz-swatch tcz-swatch-static", style: { "--tcz-color": rule.color } }),
-            h("b", { text: ` ${displayPattern(rule)}` }),
+            h("b", { text: ` ${rule.title ? `${rule.title} — ` : ""}${displayPattern(rule)}` }),
             ` (${T.MATCH_TYPES[rule.type].toLowerCase()})`
           )
         : "No rule applies"

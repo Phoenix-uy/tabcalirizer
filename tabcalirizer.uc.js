@@ -24,6 +24,7 @@
   const ATTR = { on: "tcz", style: "tcz-tab-style", border: "tcz-border-pos" };
   const VARS = ["--tcz-color", "--tcz-fg"];
   const PAGE_BORDER_CLASS = "tcz-page-border";
+  const PAGE_LABEL_CLASS = "tcz-page-label";
   const RELATIVE_ATTR = "tcz-relative";
 
   let T; // store module
@@ -105,10 +106,24 @@
     if (!container.hasAttribute(RELATIVE_ATTR) && getComputedStyle(container).position === "static") {
       container.setAttribute(RELATIVE_ATTR, "true");
     }
-    const { width, style } = rule.pageBorder;
+    const { width, style, showTitle } = rule.pageBorder;
     overlay.style.setProperty("--tcz-color", rule.color);
+    overlay.style.setProperty("--tcz-fg", T.contrastText(rule.color));
     overlay.style.setProperty("--tcz-page-width", `${width}px`);
     overlay.style.setProperty("--tcz-page-style", style);
+
+    // Optional title: a small, semi-transparent tag tucked into the bottom-right corner of the frame.
+    let label = overlay.querySelector(`:scope > .${PAGE_LABEL_CLASS}`);
+    if (showTitle && rule.title) {
+      if (!label) {
+        label = document.createElementNS(HTML_NS, "span");
+        label.className = PAGE_LABEL_CLASS;
+        overlay.append(label);
+      }
+      label.textContent = rule.title;
+    } else {
+      label?.remove();
+    }
   }
 
   function paintAll() {
@@ -322,7 +337,8 @@
       popup.append(document.createXULElement("menuseparator"));
       addItem(popup, "Color this site…", () => openSettings(draftForTab(tab, "match")));
       if (current) {
-        addItem(popup, `Remove rule (${current.type === "wildcard" ? "*." : ""}${current.pattern})`, () =>
+        const name = current.title || `${current.type === "wildcard" ? "*." : ""}${current.pattern}`;
+        addItem(popup, `Remove rule (${name})`, () =>
           T.Store.removeRule(current.id)
         );
       }

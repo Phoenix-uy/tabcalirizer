@@ -33,6 +33,8 @@ export const PAGE_BORDER_STYLES = {
   dashed: "Dashed",
 };
 
+export const TITLE_MAX = 60;
+
 export const PAGE_BORDER_MIN = 1;
 export const PAGE_BORDER_MAX = 20;
 
@@ -106,6 +108,7 @@ export function sanitizeRule(raw) {
   const page = raw.pageBorder && typeof raw.pageBorder === "object" ? raw.pageBorder : {};
   return {
     id: typeof raw.id === "string" && raw.id ? raw.id : makeId(),
+    title: String(raw.title ?? "").replace(/\s+/g, " ").trim().slice(0, TITLE_MAX),
     pattern: parsed.pattern,
     type: parsed.type,
     color,
@@ -115,6 +118,7 @@ export function sanitizeRule(raw) {
       enabled: Boolean(page.enabled),
       width: clampInt(page.width, PAGE_BORDER_MIN, PAGE_BORDER_MAX, 3),
       style: page.style in PAGE_BORDER_STYLES ? page.style : "solid",
+      showTitle: Boolean(page.showTitle),
     },
   };
 }
