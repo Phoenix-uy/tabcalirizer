@@ -82,11 +82,12 @@
 /* Rule title shown on the frame: small, translucent, out of the way. */
 .tcz-page-label {
   position: absolute;
-  inset-inline-end: 12px;
-  bottom: 0;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
   max-width: 40%;
-  padding: 1px 7px 2px;
-  border-radius: 6px 6px 0 0;
+  padding: 1px 8px 2px;
+  border-radius: 0 0 6px 6px;
   background: var(--tcz-color);
   color: var(--tcz-fg);
   font: 600 10px/1.3 system-ui, sans-serif;

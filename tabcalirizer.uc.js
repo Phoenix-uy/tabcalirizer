@@ -112,7 +112,7 @@
     overlay.style.setProperty("--tcz-page-width", `${width}px`);
     overlay.style.setProperty("--tcz-page-style", style);
 
-    // Optional title: a small, semi-transparent tag tucked into the bottom-right corner of the frame.
+    // Optional title: a small, semi-transparent tag centered on the top edge of the frame.
     let label = overlay.querySelector(`:scope > .${PAGE_LABEL_CLASS}`);
     if (showTitle && rule.title) {
       if (!label) {

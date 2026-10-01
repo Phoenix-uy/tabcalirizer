@@ -12,7 +12,7 @@ A [Sine](https://github.com/CosmoCreeper/Sine) mod for **Zen Browser** that colo
 - **Per-rule styling**
   - Tab background, tab border (left accent or full outline), or both.
   - Optional page border: 1–20 px, solid or dashed.
-  - Optional title per rule, which can be shown as a small tag in the bottom-right corner of the page border.
+  - Optional title per rule, which can be shown as a small tag centered at the top of the page border.
 - **Tab colors everywhere**: active, inactive, pinned/essentials, folders and every workspace. Text color switches to black or white automatically for readability.
 - **Settings inside Zen**: a *TabCalirizer* section in Zen's settings with a hex color picker, saved color palette, rule list with live preview, and JSON import/export.
 - **Quick actions**: right-click a tab → *TabCalirizer* to color the site with one click from your palette. There's also a toolbar button.
