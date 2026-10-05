@@ -170,7 +170,7 @@ button.tcz-swatch:hover {
 
 .tcz-rule {
   display: grid;
-  grid-template-columns: 28px minmax(140px, 1.6fr) 1.2fr 1.2fr 0.9fr auto;
+  grid-template-columns: 28px minmax(200px, 2.4fr) 1.2fr 0.9fr auto;
   align-items: center;
   gap: 8px;
   padding: 6px 4px;
@@ -198,7 +198,7 @@ button.tcz-swatch:hover {
   overflow-wrap: anywhere;
 }
 
-.tcz-rule-title + .tcz-rule-pattern {
+.tcz-rule-title ~ .tcz-rule-pattern {
   font-size: 0.9em;
   opacity: 0.75;
 }
@@ -312,4 +312,43 @@ button.tcz-swatch:hover {
 
 .tcz-pv-label[hidden] {
   display: none;
+}
+
+/* ---------- Multiple sites per rule ---------- */
+
+.tcz-field-top {
+  align-items: flex-start;
+}
+
+.tcz-field-top > label:first-child {
+  padding-top: 6px;
+}
+
+.tcz-sites {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1 1 360px;
+}
+
+.tcz-site-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tcz-rule-site .tcz-rule-pattern {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tcz-badge {
+  font-family: system-ui, sans-serif;
+  font-size: 0.75em;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+  opacity: 0.85;
+  white-space: nowrap;
 }

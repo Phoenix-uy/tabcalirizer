@@ -4,7 +4,7 @@ A [Sine](https://github.com/CosmoCreeper/Sine) mod for **Zen Browser** that colo
 
 ## Features
 
-- **Rules by site**
+- **Rules by site**: each rule can list several sites (for example, all the hosts of your dev environment), each with its own match type.
   - Exact host: `mail.google.com`
   - Domain + all subdomains: `*.google.com`
   - Base domain only: `google.com` (also matches `www.google.com`)
@@ -44,7 +44,7 @@ Open Zen's settings (`about:preferences`). If the sidebar shows **Sine Mods**, i
 ## Usage
 
 1. Settings → TabCalirizer → **Add rule**.
-2. Type a site (`github.com`, `*.google.com`, or paste a URL), pick the match type and a color (hex or picker), then choose the tab style.
+2. Type a site (`github.com`, `*.google.com`, or paste a URL) and pick its match type. Use **+ Add site** for more sites in the same rule, or paste several hosts/URLs at once. Then pick a color (hex or picker) and the tab style.
 3. Optional: tick **Draw a border around the page** and set the thickness and solid/dashed style.
 4. **Save rule**. All open tabs update right away.
 

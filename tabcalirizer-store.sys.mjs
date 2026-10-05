@@ -34,6 +34,7 @@ export const PAGE_BORDER_STYLES = {
 };
 
 export const TITLE_MAX = 60;
+export const SITES_MAX = 50;
 
 export const PAGE_BORDER_MIN = 1;
 export const PAGE_BORDER_MAX = 20;
@@ -95,22 +96,50 @@ function makeId() {
   return Services.uuid.generateUUID().toString().slice(1, 9);
 }
 
-/** Returns a clean rule object, or null if the rule is unusable. */
+export function siteKey(site) {
+  return `${site.type}:${site.pattern}`;
+}
+
+export function displaySite(site) {
+  return site.type === "wildcard" ? `*.${site.pattern}` : site.pattern;
+}
+
+/** Clean, de-duplicated list of { pattern, type } from raw input; invalid entries are dropped. */
+export function sanitizeSites(rawSites) {
+  const out = [];
+  const seen = new Set();
+  for (const s of Array.isArray(rawSites) ? rawSites : []) {
+    if (!s || typeof s !== "object") {
+      continue;
+    }
+    const parsed = parsePatternInput(String(s.pattern ?? ""), s.type in MATCH_TYPES ? s.type : "exact");
+    if (parsed && !seen.has(siteKey(parsed)) && out.length < SITES_MAX) {
+      seen.add(siteKey(parsed));
+      out.push(parsed);
+    }
+  }
+  return out;
+}
+
+/**
+ * Returns a clean rule object, or null if the rule is unusable.
+ * A rule has one or more sites; v0.2 rules with a single pattern/type are migrated.
+ */
 export function sanitizeRule(raw) {
   if (!raw || typeof raw !== "object") {
     return null;
   }
-  const parsed = parsePatternInput(String(raw.pattern ?? ""), raw.type in MATCH_TYPES ? raw.type : "exact");
+  const rawSites = Array.isArray(raw.sites) ? raw.sites : [{ pattern: raw.pattern, type: raw.type }];
+  const sites = sanitizeSites(rawSites);
   const color = normalizeHex(raw.color);
-  if (!parsed || !color) {
+  if (!sites.length || !color) {
     return null;
   }
   const page = raw.pageBorder && typeof raw.pageBorder === "object" ? raw.pageBorder : {};
   return {
     id: typeof raw.id === "string" && raw.id ? raw.id : makeId(),
     title: String(raw.title ?? "").replace(/\s+/g, " ").trim().slice(0, TITLE_MAX),
-    pattern: parsed.pattern,
-    type: parsed.type,
+    sites,
     color,
     tabStyle: raw.tabStyle in TAB_STYLES ? raw.tabStyle : "background",
     borderPosition: raw.borderPosition in BORDER_POSITIONS ? raw.borderPosition : "left",
@@ -129,12 +158,16 @@ function sanitizeData(raw) {
     return out;
   }
   if (Array.isArray(raw.rules)) {
+    // A site belongs to one rule only: the first rule that lists it keeps it.
     const seen = new Set();
     for (const r of raw.rules) {
       const rule = sanitizeRule(r);
-      const key = rule && `${rule.type}:${rule.pattern}`;
-      if (rule && !seen.has(key)) {
-        seen.add(key);
+      if (!rule) {
+        continue;
+      }
+      rule.sites = rule.sites.filter((site) => !seen.has(siteKey(site)));
+      rule.sites.forEach((site) => seen.add(siteKey(site)));
+      if (rule.sites.length) {
         out.rules.push(rule);
       }
     }
@@ -153,26 +186,27 @@ function labelCount(host) {
 
 const TYPE_WEIGHT = { exact: 3, base: 2, wildcard: 1 };
 
-function ruleMatches(rule, host) {
-  switch (rule.type) {
+function siteMatches(site, host) {
+  switch (site.type) {
     case "exact":
-      return host === rule.pattern;
+      return host === site.pattern;
     case "base":
       // "www." is treated as the same site as the bare domain.
-      return host === rule.pattern || host === `www.${rule.pattern}`;
+      return host === site.pattern || host === `www.${site.pattern}`;
     case "wildcard":
-      return host === rule.pattern || host.endsWith(`.${rule.pattern}`);
+      return host === site.pattern || host.endsWith(`.${site.pattern}`);
     default:
       return false;
   }
 }
 
 /** Higher = more specific. Longer patterns beat shorter ones; then exact > base > wildcard. */
-function specificity(rule) {
-  return labelCount(rule.pattern) * 10 + TYPE_WEIGHT[rule.type];
+function specificity(site) {
+  return labelCount(site.pattern) * 10 + TYPE_WEIGHT[site.type];
 }
 
-export function matchHost(rules, host) {
+/** Best { rule, site } for a host: the most specific matching site across all rules wins. */
+export function matchHostDetailed(rules, host) {
   if (!host) {
     return null;
   }
@@ -180,15 +214,38 @@ export function matchHost(rules, host) {
   let best = null;
   let bestScore = -1;
   for (const rule of rules) {
-    if (ruleMatches(rule, host)) {
-      const score = specificity(rule);
-      if (score > bestScore) {
-        best = rule;
-        bestScore = score;
+    for (const site of rule.sites) {
+      if (siteMatches(site, host)) {
+        const score = specificity(site);
+        if (score > bestScore) {
+          best = { rule, site };
+          bestScore = score;
+        }
       }
     }
   }
   return best;
+}
+
+export function matchHost(rules, host) {
+  return matchHostDetailed(rules, host)?.rule ?? null;
+}
+
+/** Puts `rule` in the list, replacing the rule with the same id and taking its sites away from other rules. */
+function placeRule(rules, rule) {
+  const keys = new Set(rule.sites.map(siteKey));
+  const out = [];
+  for (const r of rules) {
+    if (r.id === rule.id) {
+      continue;
+    }
+    const sites = r.sites.filter((site) => !keys.has(siteKey(site)));
+    if (sites.length) {
+      out.push(sites.length === r.sites.length ? r : { ...r, sites });
+    }
+  }
+  out.push(rule);
+  return out;
 }
 
 /** Host of an nsIURI, or "" for about:, file:, etc. */
@@ -278,9 +335,7 @@ export const Store = {
       throw new Error("Invalid rule");
     }
     await this.update((d) => {
-      // Same pattern + type replaces the existing rule.
-      d.rules = d.rules.filter((r) => r.id !== rule.id && !(r.pattern === rule.pattern && r.type === rule.type));
-      d.rules.push(rule);
+      d.rules = placeRule(d.rules, rule);
     });
     return rule;
   },
@@ -323,8 +378,7 @@ export const Store = {
         return;
       }
       for (const rule of incoming.rules) {
-        d.rules = d.rules.filter((r) => !(r.pattern === rule.pattern && r.type === rule.type));
-        d.rules.push(rule);
+        d.rules = placeRule(d.rules, rule);
       }
       d.palette = [...new Set([...d.palette, ...incoming.palette])];
     });

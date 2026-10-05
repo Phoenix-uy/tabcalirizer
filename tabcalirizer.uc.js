@@ -246,9 +246,9 @@
       return { ...existing };
     }
     if (scope === "base") {
-      return { pattern: T.baseDomainOf(host), type: "wildcard" };
+      return { sites: [{ pattern: T.baseDomainOf(host), type: "wildcard" }] };
     }
-    return { pattern: host, type: "exact" };
+    return { sites: [{ pattern: host, type: "exact" }] };
   }
 
   function colorCurrentSite() {
@@ -315,8 +315,10 @@
         const subPopup = document.createXULElement("menupopup");
         for (const color of data.palette) {
           const item = addItem(subPopup, color, () => {
-            const keep = current && current.pattern === pattern && current.type === type ? current : {};
-            T.Store.upsertRule({ ...keep, pattern, type, color });
+            // If a rule already lists this site, recolor that rule (keeping its other sites).
+            const key = T.siteKey({ pattern, type });
+            const owner = data.rules.find((r) => r.sites.some((site) => T.siteKey(site) === key));
+            T.Store.upsertRule(owner ? { ...owner, color } : { sites: [{ pattern, type }], color });
           });
           item.classList.add("menuitem-iconic", "tcz-swatch-item");
           item.style.setProperty("--tcz-color", color);
@@ -337,7 +339,8 @@
       popup.append(document.createXULElement("menuseparator"));
       addItem(popup, "Color this site…", () => openSettings(draftForTab(tab, "match")));
       if (current) {
-        const name = current.title || `${current.type === "wildcard" ? "*." : ""}${current.pattern}`;
+        const name =
+          current.title || current.sites.map(T.displaySite).join(", ").replace(/^(.{40}).+$/, "$1…");
         addItem(popup, `Remove rule (${name})`, () =>
           T.Store.removeRule(current.id)
         );

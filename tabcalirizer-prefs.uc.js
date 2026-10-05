@@ -52,9 +52,7 @@
     return select;
   }
 
-  function displayPattern(rule) {
-    return rule.type === "wildcard" ? `*.${rule.pattern}` : rule.pattern;
-  }
+  const SHORT_TYPE = { exact: "exact", wildcard: "+ subdomains", base: "base domain" };
 
   /* ---------- Navigation entry ---------- */
 
@@ -232,8 +230,9 @@
       placeholder: "Optional, e.g. Work mail",
       maxlength: String(T.TITLE_MAX),
     });
-    e.pattern = h("input", { type: "text", class: "tcz-input tcz-wide", placeholder: "mail.google.com or *.google.com" });
-    e.type = options(h("select", { class: "tcz-select" }), T.MATCH_TYPES, "exact");
+    e.siteRows = [];
+    e.sitesBox = h("div", { class: "tcz-sites" });
+    e.addSiteBtn = h("button", { class: "tcz-small", text: "+ Add site", onclick: () => addSiteRow(null, true) });
     e.color = h("input", { type: "color", class: "tcz-color", value: "#1e88e5" });
     e.hex = h("input", { type: "text", class: "tcz-input tcz-hex", value: "#1e88e5", maxlength: "7" });
     e.swatches = h("div", { class: "tcz-palette tcz-palette-small" });
@@ -277,15 +276,8 @@
     e.preview = buildPreview();
 
     linkColorInputs(e.color, e.hex, updatePreview);
-    e.pattern.addEventListener("input", () => {
-      // Typing "*.example.com" switches the match type automatically.
-      if (e.pattern.value.trim().startsWith("*.")) {
-        e.type.value = "wildcard";
-      }
-      updatePreview();
-    });
     e.title.addEventListener("input", updatePreview);
-    for (const el of [e.type, e.tabStyle, e.borderPos, e.pageOn, e.pageStyle, e.showTitle]) {
+    for (const el of [e.tabStyle, e.borderPos, e.pageOn, e.pageStyle, e.showTitle]) {
       el.addEventListener("change", updatePreview);
     }
     e.pageWidth.addEventListener("input", () => {
@@ -302,7 +294,16 @@
       { class: "tcz-editor", hidden: true },
       h("h3", { class: "tcz-editor-title", text: "New rule" }),
       h("div", { class: "tcz-field" }, h("label", { text: "Title" }), e.title),
-      h("div", { class: "tcz-field" }, h("label", { text: "Site" }), e.pattern, e.type),
+      h("div", { class: "tcz-field tcz-field-top" }, h("label", { text: "Sites" }), e.sitesBox),
+      h(
+        "div",
+        { class: "tcz-field tcz-indent" },
+        e.addSiteBtn,
+        h("span", {
+          class: "description-deemphasized",
+          text: "Tip: paste several hosts or URLs at once (one per line or comma-separated).",
+        })
+      ),
       h(
         "div",
         { class: "tcz-field" },
@@ -332,6 +333,82 @@
     );
   }
 
+  function addSiteRow(site = null, focus = false, insertAfter = null) {
+    const e = ui.ed;
+    const row = {};
+    row.input = h("input", {
+      type: "text",
+      class: "tcz-input tcz-wide",
+      placeholder: "dev.example.com, *.example.com or a URL",
+    });
+    row.type = options(h("select", { class: "tcz-select" }), T.MATCH_TYPES, site?.type in T.MATCH_TYPES ? site.type : "exact");
+    row.input.value = site ? T.displaySite(site) : "";
+    row.remove = h("button", {
+      class: "tcz-icon-btn",
+      title: "Remove this site",
+      text: "×",
+      onclick: () => {
+        if (e.siteRows.length > 1) {
+          e.siteRows.splice(e.siteRows.indexOf(row), 1);
+          row.el.remove();
+        } else {
+          row.input.value = "";
+        }
+        updateSiteRows();
+      },
+    });
+    row.input.addEventListener("input", () => {
+      // Typing "*.example.com" switches the match type automatically.
+      if (row.input.value.trim().startsWith("*.")) {
+        row.type.value = "wildcard";
+      }
+      row.input.classList.remove("tcz-invalid");
+    });
+    row.input.addEventListener("paste", (ev) => {
+      const text = ev.clipboardData?.getData("text/plain") ?? "";
+      const parts = text.split(/[\s,;]+/).filter(Boolean);
+      if (parts.length < 2) {
+        return;
+      }
+      ev.preventDefault();
+      row.input.value = parts[0];
+      row.input.dispatchEvent(new Event("input"));
+      let after = row;
+      for (const part of parts.slice(1)) {
+        after = addSiteRow(null, false, after);
+        after.input.value = part;
+        after.input.dispatchEvent(new Event("input"));
+      }
+    });
+    row.el = h("div", { class: "tcz-site-row" }, row.input, row.type, row.remove);
+    if (insertAfter) {
+      insertAfter.el.after(row.el);
+      e.siteRows.splice(e.siteRows.indexOf(insertAfter) + 1, 0, row);
+    } else {
+      e.sitesBox.append(row.el);
+      e.siteRows.push(row);
+    }
+    updateSiteRows();
+    if (focus) {
+      row.input.focus();
+    }
+    return row;
+  }
+
+  function updateSiteRows() {
+    const e = ui.ed;
+    e.addSiteBtn.disabled = e.siteRows.length >= T.SITES_MAX;
+  }
+
+  function setSiteRows(sites) {
+    const e = ui.ed;
+    e.siteRows = [];
+    e.sitesBox.replaceChildren();
+    for (const site of sites.length ? sites : [null]) {
+      addSiteRow(site);
+    }
+  }
+
   function buildPreview() {
     const p = {};
     p.inactive = h("div", { class: "tcz-pv-tab" }, h("span", { class: "tcz-pv-dot" }), h("span", { text: "Inactive tab" }));
@@ -357,8 +434,9 @@
     return {
       id: ui.editingId ?? undefined,
       title: e.title.value,
-      pattern: e.pattern.value,
-      type: e.type.value,
+      sites: e.siteRows
+        .filter((r) => r.input.value.trim())
+        .map((r) => ({ pattern: r.input.value, type: r.type.value, row: r })),
       color: readHex(e.hex),
       tabStyle: e.tabStyle.value,
       borderPosition: e.borderPos.value,
@@ -424,9 +502,14 @@
     const e = ui.ed;
     const draft = rule ?? {};
     ui.editingId = draft.id ?? null;
+    ui.confirmMove = null;
     ui.editor.querySelector(".tcz-editor-title").textContent = draft.id ? "Edit rule" : "New rule";
-    e.pattern.value = draft.pattern ? displayPattern({ pattern: draft.pattern, type: draft.type }) : "";
-    e.type.value = draft.type in T.MATCH_TYPES ? draft.type : "exact";
+    const draftSites = Array.isArray(draft.sites)
+      ? draft.sites
+      : draft.pattern
+        ? [{ pattern: draft.pattern, type: draft.type }]
+        : [];
+    setSiteRows(draftSites);
     const color = T.normalizeHex(draft.color) ?? T.Store.data.palette[0] ?? "#1e88e5";
     e.color.value = color;
     e.hex.value = color;
@@ -441,29 +524,63 @@
     renderEditorSwatches();
     updatePreview();
     ui.editor.hidden = false;
-    e.pattern.focus();
+    e.siteRows.at(-1)?.input.focus();
     ui.editor.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }
 
   function closeEditor() {
     ui.editor.hidden = true;
     ui.editingId = null;
+    ui.confirmMove = null;
   }
 
   async function saveRule() {
     const v = editorValues();
-    const parsed = T.parsePatternInput(v.pattern, v.type);
-    if (!parsed) {
-      ui.ed.error.textContent = "Enter a valid host, like example.com, mail.example.com or *.example.com.";
+    if (!v.sites.length) {
+      ui.ed.error.textContent = "Add at least one site.";
+      return;
+    }
+    // parsePatternInput turns a typed "*." prefix into a wildcard; otherwise the row's selector wins.
+    const invalid = [];
+    const sites = [];
+    for (const site of v.sites) {
+      const parsed = T.parsePatternInput(site.pattern, site.type);
+      site.row.input.classList.toggle("tcz-invalid", !parsed);
+      if (parsed) {
+        sites.push(parsed);
+      } else {
+        invalid.push(site.pattern.trim());
+      }
+    }
+    if (invalid.length) {
+      ui.ed.error.textContent = `Not a valid host: ${invalid.join(", ")}. Use example.com, dev.example.com or *.example.com.`;
       return;
     }
     if (!v.color) {
       ui.ed.error.textContent = "Enter a valid hex color in the form #RRGGBB.";
       return;
     }
-    // parsePatternInput turns a typed "*." prefix into a wildcard; otherwise the selector wins.
-    v.pattern = parsed.pattern;
-    v.type = parsed.type;
+    v.sites = sites;
+
+    // A site can only belong to one rule. Warn once before moving sites out of other rules.
+    const keys = new Set(sites.map(T.siteKey));
+    const moved = [];
+    for (const r of T.Store.data.rules) {
+      if (r.id === ui.editingId) {
+        continue;
+      }
+      for (const site of r.sites) {
+        if (keys.has(T.siteKey(site))) {
+          moved.push(`${T.displaySite(site)} (from "${r.title || T.displaySite(r.sites[0])}")`);
+        }
+      }
+    }
+    const signature = moved.join("|");
+    if (moved.length && ui.confirmMove !== signature) {
+      ui.confirmMove = signature;
+      ui.ed.error.textContent = `Already used in another rule and will be moved here: ${moved.join(", ")}. Click "Save rule" again to confirm.`;
+      return;
+    }
     try {
       await T.Store.upsertRule(v);
       closeEditor();
@@ -475,9 +592,8 @@
   /* ---------- Lists ---------- */
 
   function renderRules() {
-    const rules = [...T.Store.data.rules].sort(
-      (a, b) => a.pattern.localeCompare(b.pattern) || a.type.localeCompare(b.type)
-    );
+    const sortKey = (r) => (r.title || r.sites[0].pattern).toLowerCase();
+    const rules = [...T.Store.data.rules].sort((a, b) => sortKey(a).localeCompare(sortKey(b)));
     if (!rules.length) {
       ui.ruleList.replaceChildren(
         h("p", { class: "description-deemphasized", text: "No rules yet. Add one, or right-click any tab → TabCalirizer." })
@@ -489,8 +605,7 @@
         "div",
         { class: "tcz-rule tcz-rule-head" },
         h("span", {}),
-        h("span", { text: "Site" }),
-        h("span", { text: "Match" }),
+        h("span", { text: "Sites" }),
         h("span", { text: "Tab" }),
         h("span", { text: "Page border" }),
         h("span", {})
@@ -504,9 +619,15 @@
             "span",
             { class: "tcz-rule-site" },
             r.title ? h("span", { class: "tcz-rule-title", text: r.title }) : null,
-            h("span", { class: "tcz-rule-pattern", text: displayPattern(r) })
+            ...r.sites.map((site) =>
+              h(
+                "span",
+                { class: "tcz-rule-pattern", title: T.MATCH_TYPES[site.type] },
+                T.displaySite(site),
+                h("span", { class: "tcz-badge", text: SHORT_TYPE[site.type] })
+              )
+            )
           ),
-          h("span", { text: T.MATCH_TYPES[r.type] }),
           h(
             "span",
             {
@@ -541,7 +662,8 @@
       ui.testResult.textContent = "Not a valid host";
       return;
     }
-    const rule = T.matchHost(T.Store.data.rules, parsed.pattern);
+    const match = T.matchHostDetailed(T.Store.data.rules, parsed.pattern);
+    const rule = match?.rule;
     ui.testResult.replaceChildren(
       rule
         ? h(
@@ -549,8 +671,8 @@
             {},
             "Matches ",
             h("span", { class: "tcz-swatch tcz-swatch-static", style: { "--tcz-color": rule.color } }),
-            h("b", { text: ` ${rule.title ? `${rule.title} — ` : ""}${displayPattern(rule)}` }),
-            ` (${T.MATCH_TYPES[rule.type].toLowerCase()})`
+            h("b", { text: ` ${rule.title ? `${rule.title} — ` : ""}${T.displaySite(match.site)}` }),
+            ` (${T.MATCH_TYPES[match.site.type].toLowerCase()})`
           )
         : "No rule applies"
     );
