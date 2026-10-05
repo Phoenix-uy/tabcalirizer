@@ -1,6 +1,11 @@
 # TabCalirizer
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-support-FFDD00?logo=buymeacoffee&logoColor=000)](https://buymeacoffee.com/phoenix_uy)
+
 A [Sine](https://github.com/CosmoCreeper/Sine) mod for **Zen Browser** that colors tabs by domain or subdomain, so you can spot your sites at a glance — even on tabs that aren't selected. It can also draw a colored border (solid or dashed) around the page.
+
+![TabCalirizer preview](assets/preview.png)
 
 ## Features
 
@@ -15,7 +20,12 @@ A [Sine](https://github.com/CosmoCreeper/Sine) mod for **Zen Browser** that colo
   - Optional title per rule, which can be shown as a small tag centered at the top of the page border.
 - **Tab colors everywhere**: active, inactive, pinned/essentials, folders and every workspace. Text color switches to black or white automatically for readability.
 - **Settings inside Zen**: a *TabCalirizer* section in Zen's settings with a hex color picker, saved color palette, rule list with live preview, and JSON import/export.
-- **Quick actions**: right-click a tab → *TabCalirizer* to color the site with one click from your palette. There's also a toolbar button.
+- **Tab context menu** (right-click a tab → *TabCalirizer*), for the tab's host or its whole domain (`*.example.com`):
+  - *New rule with …*: opens the editor prefilled.
+  - *Add … to rule*: appends the site to an existing rule. A site that was in another rule is moved.
+  - *Quick color …*: one click with a palette color.
+  - *Edit rule*, *Remove site from rule* and *Delete rule*, for the rule that applies to the tab.
+- **Toolbar button**: opens the editor for the current site.
 
 ## Requirements
 
@@ -34,10 +44,19 @@ Open Zen's settings (`about:preferences`). If the sidebar shows **Sine Mods**, i
 
 ## Installing TabCalirizer
 
+### From the Sine store (recommended)
+
+1. Zen settings → **Sine Mods** → **Marketplace**.
+2. Search for **TabCalirizer** and click **Install**.
+3. Restart Zen.
+
+### From GitHub
+
 1. Zen settings → **Sine Mods** → open Sine's settings (gear icon) → enable **"Enable installing JS from unofficial sources"**. JS mods that don't come from the Sine store need this.
 2. In the install field, enter `Phoenix-uy/tabcalirizer` and install it.
 3. Restart Zen.
-4. Open settings → **TabCalirizer**, or right-click any tab → **TabCalirizer**.
+
+Then open settings → **TabCalirizer**, or right-click any tab → **TabCalirizer**.
 
 > Turning the mod off in Sine removes all colors and borders right away. Updates to the mod's JS take effect after a Zen restart.
 
@@ -88,3 +107,11 @@ Debug with the **Browser Console** (`Ctrl+Shift+J`) and filter by `[TabCalirizer
 - Zen updates can change tab markup. If colors stop showing, check the selectors noted above.
 - The toolbar button can be moved or removed via *Customize Toolbar*.
 - JS mods run with full browser privileges. Only install mods you trust.
+
+## Support
+
+TabCalirizer is free. If it saves you a few clicks, you can [buy me a coffee](https://buymeacoffee.com/phoenix_uy) ☕. Bug reports and ideas are welcome in [Issues](https://github.com/Phoenix-uy/tabcalirizer/issues).
+
+## License
+
+[MIT](LICENSE) © 2026 Gonzalo Calandria

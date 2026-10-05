@@ -296,7 +296,22 @@
       }
       const base = T.baseDomainOf(host);
       const data = T.Store.data ?? { rules: [], palette: [] };
-      const current = T.matchHost(data.rules, host);
+      const match = T.matchHostDetailed(data.rules, host);
+      const current = match?.rule ?? null;
+
+      // The two site variants offered for this tab: the exact host, and its domain with all subdomains.
+      const hostSite = { pattern: host, type: "exact" };
+      const domainSite = { pattern: base && base !== host ? base : host, type: "wildcard" };
+      const siteVariants = [hostSite, domainSite];
+
+      const ruleName = (r) => {
+        const name = r.title || r.sites.map(T.displaySite).join(", ");
+        return name.length > 40 ? `${name.slice(0, 39)}…` : name;
+      };
+      const ownerOf = (site) => {
+        const key = T.siteKey(site);
+        return data.rules.find((r) => r.sites.some((s) => T.siteKey(s) === key)) ?? null;
+      };
 
       const addItem = (parent, label, onCommand, extra = {}) => {
         const item = document.createXULElement("menuitem");
@@ -308,43 +323,78 @@
         parent.append(item);
         return item;
       };
-
-      const addColorSubmenu = (label, pattern, type) => {
+      const addSubmenu = (parent, label) => {
         const sub = document.createXULElement("menu");
         sub.setAttribute("label", label);
         const subPopup = document.createXULElement("menupopup");
+        sub.append(subPopup);
+        parent.append(sub);
+        return subPopup;
+      };
+      const swatch = (item, color) => {
+        item.classList.add("menuitem-iconic", "tcz-swatch-item");
+        item.style.setProperty("--tcz-color", color);
+        return item;
+      };
+      const separator = () => popup.append(document.createXULElement("menuseparator"));
+
+      // 1. New rule (opens the editor prefilled).
+      for (const site of siteVariants) {
+        addItem(popup, `New rule with ${T.displaySite(site)}…`, () => openSettings({ sites: [site] }));
+      }
+
+      // 2. Add this site to an existing rule. A site already in another rule is moved.
+      for (const site of siteVariants) {
+        const subPopup = addSubmenu(popup, `Add ${T.displaySite(site)} to rule`);
+        const owner = ownerOf(site);
+        if (!data.rules.length) {
+          addItem(subPopup, "No rules yet", () => {}, { disabled: "true" });
+        }
+        const sorted = [...data.rules].sort((a, b) => ruleName(a).localeCompare(ruleName(b)));
+        for (const rule of sorted) {
+          const already = owner?.id === rule.id;
+          const item = addItem(
+            subPopup,
+            already ? `${ruleName(rule)} (already here)` : ruleName(rule),
+            () => T.Store.upsertRule({ ...rule, sites: [...rule.sites, site] }),
+            already ? { disabled: "true" } : {}
+          );
+          swatch(item, rule.color);
+        }
+      }
+      separator();
+
+      // 3. Quick color: one click creates a rule, or recolors the rule that already owns the site.
+      for (const site of siteVariants) {
+        const subPopup = addSubmenu(popup, `Quick color ${T.displaySite(site)}`);
         for (const color of data.palette) {
-          const item = addItem(subPopup, color, () => {
-            // If a rule already lists this site, recolor that rule (keeping its other sites).
-            const key = T.siteKey({ pattern, type });
-            const owner = data.rules.find((r) => r.sites.some((site) => T.siteKey(site) === key));
-            T.Store.upsertRule(owner ? { ...owner, color } : { sites: [{ pattern, type }], color });
-          });
-          item.classList.add("menuitem-iconic", "tcz-swatch-item");
-          item.style.setProperty("--tcz-color", color);
+          swatch(
+            addItem(subPopup, color, () => {
+              const owner = ownerOf(site);
+              T.Store.upsertRule(owner ? { ...owner, color } : { sites: [site], color });
+            }),
+            color
+          );
         }
         if (!data.palette.length) {
           addItem(subPopup, "No saved colors yet", () => {}, { disabled: "true" });
         }
-        sub.append(subPopup);
-        popup.append(sub);
-      };
+      }
 
-      addColorSubmenu(`Color ${host}`, host, "exact");
-      if (base && base !== host) {
-        addColorSubmenu(`Color *.${base}`, base, "wildcard");
-      } else {
-        addColorSubmenu(`Color ${host} and subdomains`, host, "wildcard");
-      }
-      popup.append(document.createXULElement("menuseparator"));
-      addItem(popup, "Color this site…", () => openSettings(draftForTab(tab, "match")));
+      // 4. Manage the rule that currently applies to this tab.
       if (current) {
-        const name =
-          current.title || current.sites.map(T.displaySite).join(", ").replace(/^(.{40}).+$/, "$1…");
-        addItem(popup, `Remove rule (${name})`, () =>
-          T.Store.removeRule(current.id)
-        );
+        separator();
+        const name = ruleName(current);
+        addItem(popup, `Edit rule "${name}"…`, () => openSettings({ ...current }));
+        if (current.sites.length > 1) {
+          addItem(popup, `Remove ${T.displaySite(match.site)} from "${name}"`, () => {
+            const key = T.siteKey(match.site);
+            T.Store.upsertRule({ ...current, sites: current.sites.filter((s) => T.siteKey(s) !== key) });
+          });
+        }
+        addItem(popup, `Delete rule "${name}"`, () => T.Store.removeRule(current.id));
       }
+      separator();
       addItem(popup, "Open TabCalirizer settings", () => openSettings());
     });
 

@@ -1,11 +1,12 @@
 {
   "id": "tabcalirizer",
   "name": "TabCalirizer",
-  "description": "Color tabs by domain or subdomain, with optional colored borders around the page.",
+  "description": "Color tabs by domain or subdomain, even when they're inactive. Several sites per rule, optional solid/dashed page border with a title, settings inside Zen and right-click quick actions.",
   "author": "Phoenix-uy",
-  "version": "0.3.0",
+  "version": "0.5.0",
   "homepage": "https://github.com/Phoenix-uy/tabcalirizer",
   "readme": "https://raw.githubusercontent.com/Phoenix-uy/tabcalirizer/main/README.md",
+  "image": "https://raw.githubusercontent.com/Phoenix-uy/tabcalirizer/main/assets/preview.png",
   "style": {
     "chrome": "chrome.css"
   },
@@ -18,6 +19,6 @@
     }
   },
   "supportsUnload": true,
-  "tags": ["tabs", "colors", "productivity"],
+  "tags": ["tabs", "colors", "domains", "productivity", "vertical tabs"],
   "fork": ["zen"]
 }
