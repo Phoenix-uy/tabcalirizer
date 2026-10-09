@@ -205,8 +205,30 @@
     window.openPreferences(PREFS_PANE);
   }
 
+  // Where CustomizableUI lives depends on the Firefox/Zen version, so try each known location.
+  function loadCustomizableUI() {
+    try {
+      if (window.CustomizableUI) {
+        return window.CustomizableUI;
+      }
+    } catch {}
+    for (const url of [
+      "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
+      "resource:///modules/CustomizableUI.sys.mjs",
+    ]) {
+      try {
+        return ChromeUtils.importESModule(url).CustomizableUI;
+      } catch {}
+    }
+    return null;
+  }
+
   function addToolbarButton() {
-    const { CustomizableUI } = ChromeUtils.importESModule("resource:///modules/CustomizableUI.sys.mjs");
+    const CustomizableUI = loadCustomizableUI();
+    if (!CustomizableUI) {
+      warnOnce("cui", "CustomizableUI not found; toolbar button disabled.");
+      return;
+    }
     if (!CustomizableUI.getWidget(BUTTON_ID)?.instances?.length) {
       try {
         CustomizableUI.createWidget({
@@ -443,10 +465,14 @@
 
     window.TabCalirizer = { colorCurrentSite, openSettings, repaint: paintAll };
 
-    addTabListeners();
-    buildContextMenu();
-    addToolbarButton();
-    paintAll();
+    // Each step is independent: one failing must not stop tabs from being painted.
+    for (const step of [addTabListeners, paintAll, buildContextMenu, addToolbarButton]) {
+      try {
+        step();
+      } catch (err) {
+        console.error(LOG, `Init step "${step.name}" failed:`, err);
+      }
+    }
 
     if (typeof window.addUnloadListener === "function") {
       window.addUnloadListener(teardown);
