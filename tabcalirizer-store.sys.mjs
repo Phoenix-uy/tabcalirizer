@@ -28,6 +28,11 @@ export const BORDER_POSITIONS = {
   outline: "Full outline",
 };
 
+export const TAB_BORDER_LINES = {
+  solid: "Solid",
+  dashed: "Dashed",
+};
+
 export const PAGE_BORDER_STYLES = {
   solid: "Solid",
   dashed: "Dashed",
@@ -143,6 +148,7 @@ export function sanitizeRule(raw) {
     color,
     tabStyle: raw.tabStyle in TAB_STYLES ? raw.tabStyle : "background",
     borderPosition: raw.borderPosition in BORDER_POSITIONS ? raw.borderPosition : "left",
+    borderLine: raw.borderLine in TAB_BORDER_LINES ? raw.borderLine : "solid",
     pageBorder: {
       enabled: Boolean(page.enabled),
       width: clampInt(page.width, PAGE_BORDER_MIN, PAGE_BORDER_MAX, 3),

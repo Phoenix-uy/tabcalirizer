@@ -238,7 +238,8 @@
     e.swatches = h("div", { class: "tcz-palette tcz-palette-small" });
     e.tabStyle = options(h("select", { class: "tcz-select" }), T.TAB_STYLES, "background");
     e.borderPos = options(h("select", { class: "tcz-select" }), T.BORDER_POSITIONS, "left");
-    e.borderPosRow = h("div", { class: "tcz-field" }, h("label", { text: "Tab border" }), e.borderPos);
+    e.borderLine = options(h("select", { class: "tcz-select" }), T.TAB_BORDER_LINES, "solid");
+    e.borderPosRow = h("div", { class: "tcz-field" }, h("label", { text: "Tab border" }), e.borderPos, e.borderLine);
     e.pageOn = h("input", { type: "checkbox", id: "tcz-page-on" });
     e.pageWidth = h("input", {
       type: "range",
@@ -277,7 +278,7 @@
 
     linkColorInputs(e.color, e.hex, updatePreview);
     e.title.addEventListener("input", updatePreview);
-    for (const el of [e.tabStyle, e.borderPos, e.pageOn, e.pageStyle, e.showTitle]) {
+    for (const el of [e.tabStyle, e.borderPos, e.borderLine, e.pageOn, e.pageStyle, e.showTitle]) {
       el.addEventListener("change", updatePreview);
     }
     e.pageWidth.addEventListener("input", () => {
@@ -440,6 +441,7 @@
       color: readHex(e.hex),
       tabStyle: e.tabStyle.value,
       borderPosition: e.borderPos.value,
+      borderLine: e.borderLine.value,
       pageBorder: {
         enabled: e.pageOn.checked,
         width: e.pageWidthNum.value,
@@ -470,6 +472,7 @@
       tab.style.setProperty("--tcz-fg", fg);
       tab.setAttribute("data-style", v.tabStyle);
       tab.setAttribute("data-pos", v.borderPosition);
+      tab.style.setProperty("--tcz-line", v.borderLine);
     }
     const width = Math.min(T.PAGE_BORDER_MAX, Math.max(T.PAGE_BORDER_MIN, Number(v.pageBorder.width) || 3));
     e.preview.page.style.border = v.pageBorder.enabled ? `${width}px ${v.pageBorder.style} ${color}` : "";
@@ -516,6 +519,7 @@
     e.hex.classList.remove("tcz-invalid");
     e.tabStyle.value = draft.tabStyle ?? "background";
     e.borderPos.value = draft.borderPosition ?? "left";
+    e.borderLine.value = draft.borderLine ?? "solid";
     e.pageOn.checked = Boolean(draft.pageBorder?.enabled);
     e.pageWidth.value = e.pageWidthNum.value = String(draft.pageBorder?.width ?? 3);
     e.pageStyle.value = draft.pageBorder?.style ?? "solid";
@@ -633,7 +637,9 @@
             {
               text:
                 T.TAB_STYLES[r.tabStyle] +
-                (r.tabStyle === "background" ? "" : ` (${T.BORDER_POSITIONS[r.borderPosition].toLowerCase()})`),
+                (r.tabStyle === "background"
+                  ? ""
+                  : ` (${T.BORDER_POSITIONS[r.borderPosition].toLowerCase()}, ${r.borderLine})`),
             }
           ),
           h("span", {

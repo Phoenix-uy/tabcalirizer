@@ -4,6 +4,7 @@
  *   [tcz-tab-style]        background | border | both
  *   [tcz-border-pos]       left | outline
  *   --tcz-color / --tcz-fg rule color and readable text color
+ *   --tcz-tab-line         solid | dashed (tab border line style)
  * Tweak the intensities below to taste.
  */
 
@@ -50,11 +51,11 @@
 /* ---------- Border ---------- */
 
 .tabbrowser-tab[tcz]:is([tcz-tab-style="border"], [tcz-tab-style="both"])[tcz-border-pos="left"] > .tab-stack > .tab-background {
-  border-inline-start: var(--tcz-accent-width) solid var(--tcz-color) !important;
+  border-inline-start: var(--tcz-accent-width) var(--tcz-tab-line, solid) var(--tcz-color) !important;
 }
 
 .tabbrowser-tab[tcz]:is([tcz-tab-style="border"], [tcz-tab-style="both"])[tcz-border-pos="outline"] > .tab-stack > .tab-background {
-  outline: var(--tcz-outline-width) solid var(--tcz-color) !important;
+  outline: var(--tcz-outline-width) var(--tcz-tab-line, solid) var(--tcz-color) !important;
   outline-offset: calc(-1 * var(--tcz-outline-width)) !important;
 }
 

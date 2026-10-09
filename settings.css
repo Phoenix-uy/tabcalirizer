@@ -268,11 +268,11 @@ button.tcz-swatch:hover {
 }
 
 .tcz-pv-tab:is([data-style="border"], [data-style="both"])[data-pos="left"] {
-  border-inline-start: 4px solid var(--tcz-color);
+  border-inline-start: 4px var(--tcz-line, solid) var(--tcz-color);
 }
 
 .tcz-pv-tab:is([data-style="border"], [data-style="both"])[data-pos="outline"] {
-  outline: 2px solid var(--tcz-color);
+  outline: 2px var(--tcz-line, solid) var(--tcz-color);
   outline-offset: -2px;
 }
 

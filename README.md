@@ -15,7 +15,7 @@ A [Sine](https://github.com/CosmoCreeper/Sine) mod for **Zen Browser** that colo
   - Base domain only: `google.com` (also matches `www.google.com`)
   - The most specific rule wins: `mail.google.com` beats `*.google.com`.
 - **Per-rule styling**
-  - Tab background, tab border (left accent or full outline), or both.
+  - Tab background, tab border (left accent or full outline, solid or dashed), or both.
   - Optional page border: 1–20 px, solid or dashed.
   - Optional title per rule, which can be shown as a small tag centered at the top of the page border.
 - **Tab colors everywhere**: active, inactive, pinned/essentials, folders and every workspace. Text color switches to black or white automatically for readability.

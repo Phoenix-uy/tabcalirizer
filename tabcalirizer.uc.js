@@ -22,7 +22,7 @@
 
   // Tab attributes and CSS custom properties this script sets (all removed on unload).
   const ATTR = { on: "tcz", style: "tcz-tab-style", border: "tcz-border-pos" };
-  const VARS = ["--tcz-color", "--tcz-fg"];
+  const VARS = ["--tcz-color", "--tcz-fg", "--tcz-tab-line"];
   const PAGE_BORDER_CLASS = "tcz-page-border";
   const PAGE_LABEL_CLASS = "tcz-page-label";
   const RELATIVE_ATTR = "tcz-relative";
@@ -70,6 +70,7 @@
         tab.setAttribute(ATTR.border, rule.borderPosition);
         tab.style.setProperty("--tcz-color", rule.color);
         tab.style.setProperty("--tcz-fg", T.contrastText(rule.color));
+        tab.style.setProperty("--tcz-tab-line", rule.borderLine);
       }
       paintPageBorder(tab, rule);
     } catch (err) {
